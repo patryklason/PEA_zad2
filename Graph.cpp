@@ -8,6 +8,13 @@
 #include <cmath>
 #include "Graph.h"
 #include "TimeCounter.h"
+
+#include <ntdef.h>
+#include <profileapi.h>
+#include "fstream"
+#include "iostream"
+#include "iomanip"
+
 using namespace std;
 /**
  * Wczytuje graf z pliku do programu
@@ -71,6 +78,16 @@ bool Graph::readGraphFromFile(string filename) {
  * Przeprowadza algorytm Symulowanego Wyzarzania
  */
 void Graph::simulatedAnnealing() {
+
+    long long int frequency, start, elapsed;
+    QueryPerformanceFrequency((LARGE_INTEGER *)&frequency);
+    long long int totalTime = 0;
+
+    vector<int> minimumsArray;
+    vector<float> timesArray;
+    vector<float> errors;
+    int best = 2465;
+
     TimeCounter timeCounter;
     srand(time(NULL));
     timeCounter.start();
@@ -78,8 +95,11 @@ void Graph::simulatedAnnealing() {
     // czas odnalezienia rozwiazania
     int foundTime = 0;
 
+    start = read_QPC();
+
     // na poczatku wykonaj algorytm zachlanny
     minCost = SA_greedyAlgorithm();
+    // SA_temperature = minCost * 2.2;
 
     // powtarzaj dopoki nie przekroczy czasu lub temperatura spadnie ponizej wartosci minimalnej
     while (timeCounter.elapsedSeconds() < SA_stop && SA_temperature > SA_minTemperature) {
@@ -117,14 +137,39 @@ void Graph::simulatedAnnealing() {
         if (localMin < minCost || probabilityCondition(localMin)) {
             minCost = localMin;
             minPath = localPath;
-            foundTime = timeCounter.elapsedSeconds();
+
+            if (minCost < globalMinCost) {
+                globalMinCost = minCost;
+                globalMinPath = minPath;
+                foundTime = timeCounter.elapsedSeconds();
+
+                elapsed = read_QPC() - start;
+                minimumsArray.push_back(localMin);
+                timesArray.push_back(1000.0 * (float)elapsed / (float)frequency);
+                errors.push_back((( (float)localMin - (float)best) / (float)best));
+            }
+
         }
         // zmien temperature, zgodnie ze wzorem T(i + 1) = a * T(i)
         SA_temperature *= SA_a;
     }
 
-    cout << "Besto found in [s]: " << foundTime << endl;
+    cout << "Best found in [s]: " << foundTime << endl;
     cout << "Total time [s]: " << timeCounter.elapsedSeconds() << endl << setprecision(20) << fixed << SA_temperature << endl;
+
+
+    ofstream myfile;
+    myfile.open("example.csv", std::ios::out | std::ios::app);
+    myfile << "local Min;elapsedMS;error\n";
+
+
+    for (int i = 0; i < minimumsArray.size(); ++i) {
+        //cout << minimumsArray[i] << " " << timesArray[i] << endl;
+
+        myfile << minimumsArray[i] << ";" << timesArray[i] << ";" << errors[i] << "\n";
+    }
+    myfile.close();
+    cout << "total time: " << timeCounter.elapsedMiliSeconds();
 }
 
 /**
@@ -224,4 +269,10 @@ void Graph::insert(int toBeInsetedIndex, int whereToInsertIndex, vector<int> &pa
  */
 bool Graph::probabilityCondition(int localMin) {
     return (localMin > minCost && exp((double(minCost - localMin) / SA_temperature)) > (double(rand()) / (double(RAND_MAX) + 1.0)));
+}
+
+long long int Graph::read_QPC() {
+    LARGE_INTEGER count;
+    QueryPerformanceCounter(&count);
+    return((long long int)count.QuadPart);
 }

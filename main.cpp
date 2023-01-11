@@ -6,10 +6,10 @@ void displayResults(Graph * g) {
         cout << "Algorytm nie zostal wykonany!" << endl;
         return;
     }
-    cout << "Minimalny koszt: " << g->minCost << endl;
+    cout << "Minimalny koszt: " << g->globalMinCost << endl;
     cout << "Minimalna sciezka: ";
-    for (int i = 0; i < g->minPath.size(); ++i) {
-        cout << g->minPath[i] << " -> ";
+    for (int i = 0; i < g->globalMinPath.size(); ++i) {
+        cout << g->globalMinPath[i] << " -> ";
     }
     cout << "0" << endl;
 }
@@ -62,8 +62,7 @@ void setTemperature(Graph * g) {
     g->SA_temperature = temp;
 }
 
-bool displayMenu() {
-    auto *g = new Graph();
+bool displayMenu(Graph * g) {
     char choice;
 
     cout << "============== Menu Glowne ==============" << endl;
@@ -94,16 +93,23 @@ bool displayMenu() {
 
 using namespace std;
 int main() {
-    while(displayMenu());
     /*auto g = new Graph();
+    while(displayMenu(g));*/
+    auto g = new Graph();
     g->readGraphFromFile("../rbg403.atsp");
-    cout << endl << g->size << endl;
+    //cout << endl << g->size << endl;
     g->SA_a = 0.9;
+
     g->SA_stop = 6*60;
     g->SA_temperature = g->size*g->size;
+
+    //cout << g->SA_a << endl;
+    //cout << g->SA_stop << endl;
+    //cout << g->SA_temperature << endl;
+
     g->simulatedAnnealing();
     displayResults(g);
-     */
+
 
     return 0;
 }

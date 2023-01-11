@@ -33,6 +33,8 @@ public:
     int size;
     int minCost;
     vector<int> minPath;
+    int globalMinCost;
+    vector<int> globalMinPath;
 
     long long int SA_stop;
     double SA_temperature;
@@ -40,6 +42,7 @@ public:
 
 
     Graph() {
+        this->globalMinCost = INT_MAX;
         this->size = -1;
         this->firstIndex = 0;
         this->SA_stop = 0;
@@ -52,6 +55,7 @@ public:
     bool readGraphFromFile(string filename);
     void simulatedAnnealing();
     void printMatrix();
+    long long int read_QPC();
 //private:
 
     vector<vector<int>> matrix;
